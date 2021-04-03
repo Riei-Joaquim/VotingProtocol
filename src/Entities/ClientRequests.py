@@ -3,19 +3,19 @@ from dataclasses import dataclass
 @dataclass
 class ClientRequestCreate:
     Packet:str = "Client Request Create"
-    Token:str
-    FlagCreateSession:bool
-    FlagAvailableSession:bool
-    FlagCompletedSession:bool
-    Title:str
-    QtdOptions:int
-    Options:list
-    Timeout:str
+    Token:str = None
+    FlagCreateSession:bool = None
+    FlagAvailableSession:bool = None
+    FlagCompletedSession:bool = None
+    Title:str = None
+    QtdOptions:int = None
+    Options:list = None
+    Timeout:str = None
 
 @dataclass
 class ClientRequest:
     Packet:str = "Client Request Create"
-    Token:str
-    FlagCreateSession:bool
-    FlagAvailableSession:bool
-    FlagCompletedSession:bool
+    Token:str = None
+    FlagCreateSession:bool = None
+    FlagAvailableSession:bool = None
+    FlagCompletedSession:bool = None

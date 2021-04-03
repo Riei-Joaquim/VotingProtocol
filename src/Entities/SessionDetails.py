@@ -3,15 +3,15 @@ from dataclasses import dataclass
 @dataclass
 class SessionDetails:
     Packet:str = "Session Details"
-    Token:str
-    Title:str
+    Token:str = None
+    Title:str = None
 
 @dataclass
 class SessionDescription:
     Packet:str = "Session Description"
-    Token:str
-    Title:str
-    FlagFinished:bool
-    QtdOptions:int
-    Result:list
-    Options:list
+    Token:str = None
+    Title:str = None
+    FlagFinished:bool = None
+    QtdOptions:int = None
+    Result:list = None
+    Options:list = None

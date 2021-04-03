@@ -3,6 +3,6 @@ from dataclasses import dataclass
 @dataclass
 class ClientData:
     Packet:str = "Client Data"
-    Email:str
-    Password:str
-    PublicKey:str
+    Email:str = None
+    Password:str = None
+    PublicKey:str = None

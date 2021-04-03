@@ -3,5 +3,5 @@ from dataclasses import dataclass
 @dataclass
 class HelloClient:
     Packet:str = "Hello Client"
-    ServerAddress:str
-    PublicKey:str
+    ServerAddress:str = None
+    PublicKey:str = None

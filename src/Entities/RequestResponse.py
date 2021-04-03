@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass
 class RequestResponse:
     Packet:str = "Request Response"
-    FlagAvailableSessions:bool
-    FlagCompletedSessions:bool
-    QtdSessions:int
-    Sessions:list
+    FlagAvailableSessions:bool = None
+    FlagCompletedSessions:bool = None
+    QtdSessions:int = None
+    Sessions:list = None
