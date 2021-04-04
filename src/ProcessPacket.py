@@ -21,11 +21,16 @@ class ProcessPacket:
         self.RSARemotePublicKey = ''
 
     def getLocalPublicKey(self):
-        return self.RSALocalPublicKey
+        return self.RSALocalPublicKey.public_bytes(encoding=serialization.Encoding.PEM, 
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
 
     def setRemotePublicKey(self, remotePublicKey):
-        self.RSARemotePublicKey = remotePublicKey
-        self.Encrypter = 'RSA'
+        key = serialization.load_pem_public_key(remotePublicKey.encode())
+        if isinstance(key, rsa.RSAPublicKey):
+            self.RSARemotePublicKey = key
+            self.Encrypter = 'RSA'
+        else:
+            print('Invalid Public Key!')
 
     def encode(self, obj):
         strObj = json.dumps(obj.__dict__)
