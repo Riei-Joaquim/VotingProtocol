@@ -1,4 +1,4 @@
-from Entities import *
+from VP.Entities import *
 import json
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 class ProcessPacket:
     def __init__(self):
-        f = open('config\\AESKey.bin', 'rb')
+        f = open('VP\\config\\AESKey.bin', 'rb')
         self.AESKey = f.read()
         self.Encrypter = 'AES'
         f.close()
