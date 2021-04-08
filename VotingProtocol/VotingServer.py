@@ -15,9 +15,9 @@ class VotingServer:
     def run(self):
         print('server is running!')
         while True:
-            data, addr = self.CommGeneral.readMessage()
-            jsonObj = json.loads(data)
-            if jsonObj["Packet"] == "Hello Servers":
+            data, addr = self.CommGeneral.readMessage(None)
+            
+            if data["Packet"] == "Hello Servers":
                 hello = HelloClient(ServerAddress=str(self.CommGeneral.getLocalIP()), PublicKey=str(self.ProcessPacket.getLocalPublicKey()))
-                self.CommGeneral.sendPacketTo(hello, addr[0])
+                self.CommGeneral.sendPacketTo(hello, addr[0]) 
                 print('from ', addr, 'receive', data)

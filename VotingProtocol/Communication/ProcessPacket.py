@@ -1,5 +1,6 @@
 from VotingProtocol.Entities import *
 import json
+import sys
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
@@ -36,19 +37,28 @@ class ProcessPacket:
         strObj = json.dumps(obj.__dict__)
         strObjbytes = strObj.encode('utf-8')
 
-        if(self.Encrypter == 'AES'):
-            return self.AEScipher.encrypt(strObjbytes)
-        else:
-            return self.RSARemotePublicKey.encrypt(strObjbytes, 
-                padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
-        
-    def decode(self, obj):
-        if self.Encrypter == 'AES' :
-            strObjbytes = self.AEScipher.decrypt(obj)
-        else:
-            strObjbytes = self.RSALocalPrivateKey.decrypt(obj, 
-                padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()),algorithm=hashes.SHA256(), label=None))
+        return strObjbytes
 
-        strObj = strObjbytes.decode('utf-8')
+        #if(self.Encrypter == 'AES'):
+        #    return self.AEScipher.encrypt(strObjbytes)
+        #else:
+        #    return self.RSARemotePublicKey.encrypt(strObjbytes, 
+        #        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+        
+    def decode(self, obj, typeObject):
+        #if self.Encrypter == 'AES' :
+        #    strObjbytes = self.AEScipher.decrypt(obj)
+        #else:
+        #    strObjbytes = self.RSALocalPrivateKey.decrypt(obj, 
+        #        padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()),algorithm=hashes.SHA256(), label=None))
+
+        strObj = obj.decode('utf-8')
         jsonObj = json.loads(strObj)
-        return jsonObj
+        if typeObject is not None:
+            try:
+                ansObj = typeObject(**jsonObj)
+                return ansObj
+            except Exception:
+                return None
+        else:
+            return jsonObj

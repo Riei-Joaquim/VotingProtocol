@@ -33,10 +33,10 @@ class Communication:
         # self.ReadThread = Thread(target=self.readMessages, args=(self.CommSocket,))
         # self.ReadThread.start()
     
-    def tryReadMessage(self):
+    def tryReadMessage(self, typeObject):
         try:
-            message = self.CommSocket.recv(1024).decode('utf-8')
-            return message
+            encoded = self.CommSocket.recv(1024)
+            return self.PPacket.decode(encoded, typeObject)
         except timeout as e:
             return None
 
@@ -47,9 +47,9 @@ class Communication:
     def close(self):
         self.CommSocket.close()
     
-    def readMessage(self):
+    def readMessage(self, typeObject):
         data, addr = self.CommSocket.recvfrom(1024)
-        decode = data.decode('utf-8')
+        decode = self.PPacket.decode(data, typeObject)
         return decode, addr
     
     def getLocalIP(self):
@@ -58,10 +58,10 @@ class Communication:
         return hostIP
 
     def broadcastPacket(self, packet):
-        encoded = json.dumps(packet.__dict__).encode('utf-8')
+        encoded = self.PPacket.encode(packet)
         self.CommSocket.sendto(encoded, self.Adress)
     
     def sendPacketTo(self, packet, IP):
-        encoded = json.dumps(packet.__dict__).encode('utf-8')
+        encoded = self.PPacket.encode(packet)
         self.CommSocket.sendto(encoded, (IP,self.Port))
     
