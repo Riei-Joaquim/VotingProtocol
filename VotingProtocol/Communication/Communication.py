@@ -35,7 +35,7 @@ class Communication:
     
     def tryReadMessage(self, typeObject):
         try:
-            encoded = self.CommSocket.recv(1024)
+            encoded = self.CommSocket.recv(4096)
             return self.PPacket.decode(encoded, typeObject)
         except timeout as e:
             return None
@@ -48,7 +48,7 @@ class Communication:
         self.CommSocket.close()
     
     def readMessage(self, typeObject):
-        data, addr = self.CommSocket.recvfrom(1024)
+        data, addr = self.CommSocket.recvfrom(4096)
         decode = self.PPacket.decode(data, typeObject)
         return decode, addr
     
