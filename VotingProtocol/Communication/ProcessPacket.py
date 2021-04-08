@@ -1,4 +1,4 @@
-from VP.Entities import *
+from VotingProtocol.Entities import *
 import json
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 class ProcessPacket:
     def __init__(self):
-        f = open('VP\\config\\AESKey.bin', 'rb')
+        f = open('VotingProtocol\\config\\AESKey.bin', 'rb')
         self.AESKey = f.read()
         self.Encrypter = 'AES'
         f.close()
@@ -42,7 +42,7 @@ class ProcessPacket:
             return self.RSARemotePublicKey.encrypt(strObjbytes, 
                 padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
         
-    def decode(self, obj, typeObject):
+    def decode(self, obj):
         if self.Encrypter == 'AES' :
             strObjbytes = self.AEScipher.decrypt(obj)
         else:
@@ -51,4 +51,4 @@ class ProcessPacket:
 
         strObj = strObjbytes.decode('utf-8')
         jsonObj = json.loads(strObj)
-        return typeObject(**jsonObj)
+        return jsonObj
