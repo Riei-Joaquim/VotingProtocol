@@ -64,7 +64,10 @@ class ProcessPacket:
         jsonObj = json.loads(strObj)
         if typeObject is not None:
             try:
+                typeRef = typeObject()
                 ansObj = typeObject(**jsonObj)
+                if(typeRef.Packet != ansObj.Packet):
+                    return None
                 return ansObj
             except Exception:
                 return None
