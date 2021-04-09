@@ -1,22 +1,21 @@
 from VotingProtocol.Entities import *
-from VotingProtocol.Communication.Communication import Communication
+import VotingProtocol.Communication.Communication as Comm
 import time
 import json
 from threading import Thread
 
-class VotingClient:
-    """
-    Voting Client
-    """
-    def __init__(self):
-        self.Comm = Communication('CLIENT')
+def VotingClient():
+    # Discover servers infos
+    CommUDPSocket = Comm.startUDPSocket('CLIENT')
+    hello = Comm.UDPDiscoverServers(CommUDPSocket)
+
+    if hello is not None:
+        print(hello)
+        Comm.setupRemoteServer(hello.ServerAddress, hello.PublicKey)
+
+    CommUDPSocket.close()
+
+    # Conect in server
+    Comm.TCPClientRunner()
+
     
-    def discoverServers(self):
-        while True:
-            msg = HelloServers()
-            self.Comm.broadcastPacket(msg)
-            ans = self.Comm.tryReadMessage(HelloClient)
-            if ans is not None:
-                print(ans)
-                self.Comm.setupRemoteServer(ans.ServerAddress, ans.PublicKey)
-                break

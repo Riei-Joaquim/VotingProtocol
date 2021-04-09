@@ -1,23 +1,14 @@
 from VotingProtocol.Entities import *
-from VotingProtocol.Communication.Communication import Communication
+import VotingProtocol.Communication.Communication as Comm
 from VotingProtocol.Communication.ProcessPacket import ProcessPacket
 import json
+from threading import Thread
 
-class VotingServer:
-    """
-    Voting Server
-    """
-    def __init__(self):
-        self.CommGeneral = Communication('SERVER')
-        self.CommClients = []
-        self.ProcessPacket = ProcessPacket()
-    
-    def run(self):
-        print('server is running!')
-        while True:
-            data, addr = self.CommGeneral.readMessage(None)
-            
-            if data["Packet"] == "Hello Servers":
-                hello = HelloClient(ServerAddress=str(self.CommGeneral.getLocalIP()), PublicKey=str(self.ProcessPacket.getLocalPublicKey()))
-                self.CommGeneral.sendPacketTo(hello, addr[0]) 
-                print('from ', addr, 'receive', data)
+def VotingServer():
+    CommUDPSocket = Comm.startUDPSocket('SERVER')
+    managerUDP = Thread(target=Comm.UDPServerRunner, args=(CommUDPSocket,))
+    managerTCP = Thread(target=Comm.TCPServerRunner)
+    managerUDP.start()
+    managerTCP.start()
+    managerUDP.join()
+    managerTCP.join()

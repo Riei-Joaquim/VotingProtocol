@@ -11,19 +11,31 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
 class ProcessPacket:
-    def __init__(self):
+    def __init__(self, initialEncryption = 'AES', previousRSAKeys = None):
         f = open('VotingProtocol\\config\\AESKey.bin', 'rb')
         self.AESKey = f.read()
-        self.Encrypter = 'AES'
+        self.Encrypter = initialEncryption
         f.close()
 
         # RSA encryption
-        self.RSALocalPrivateKey = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        self.RSALocalPublicKey = self.RSALocalPrivateKey.public_key()
-        self.RSARemotePublicKey = ''
+        if previousRSAKeys is not None:
+            self.RSALocalPrivateKey = previousRSAKeys
+            self.RSALocalPublicKey = self.RSALocalPrivateKey.public_key()
+        else:
+            self.RSALocalPrivateKey = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+            self.RSALocalPublicKey = self.RSALocalPrivateKey.public_key()
+        
+        self.RSARemotePublicKey = None
 
     def getLocalPublicKey(self):
         return self.RSALocalPublicKey.public_bytes(encoding=serialization.Encoding.PEM, 
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
+    
+    def getRemotePublicKey(self):
+        if self.RSARemotePublicKey is None:
+            return None
+
+        return self.RSARemotePublicKey.public_bytes(encoding=serialization.Encoding.PEM, 
                     format=serialization.PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
 
     def setRemotePublicKey(self, remotePublicKey):
@@ -49,16 +61,21 @@ class ProcessPacket:
                 padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
         
     def decode(self, obj, typeObject):
-        if self.Encrypter == 'AES' :
-            cipherObj = json.loads(obj)
-            nonce = bytes.fromhex(cipherObj['nonce'])
-            tag = bytes.fromhex(cipherObj['tag'])
-            ciphertext = bytes.fromhex(cipherObj['cicherText'])
-            AEScipher = AES.new(self.AESKey, AES.MODE_EAX, nonce)
-            strObjbytes = AEScipher.decrypt_and_verify(ciphertext, tag)
-        else:
-            strObjbytes = self.RSALocalPrivateKey.decrypt(obj, 
-                padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()),algorithm=hashes.SHA256(), label=None))
+        try:
+            if self.Encrypter == 'AES' :
+                cipherObj = json.loads(obj.decode('utf-8'))
+                nonce = bytes.fromhex(cipherObj['nonce'])
+                tag = bytes.fromhex(cipherObj['tag'])
+                ciphertext = bytes.fromhex(cipherObj['cicherText'])
+                AEScipher = AES.new(self.AESKey, AES.MODE_EAX, nonce)
+                strObjbytes = AEScipher.decrypt_and_verify(ciphertext, tag)
+            else:
+                strObjbytes = self.RSALocalPrivateKey.decrypt(obj, 
+                    padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()),algorithm=hashes.SHA256(), label=None))
+        except Exception as e:
+            print(obj)
+            print(e)
+            return None
 
         strObj = strObjbytes.decode('utf-8')
         jsonObj = json.loads(strObj)
