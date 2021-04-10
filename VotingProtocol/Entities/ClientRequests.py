@@ -14,7 +14,7 @@ class ClientRequestCreate:
 
 @dataclass
 class ClientRequest:
-    Packet:str = "Client Request Create"
+    Packet:str = "Client Request"
     Token:str = None
     FlagCreateSession:bool = None
     FlagAvailableSession:bool = None

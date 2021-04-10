@@ -90,9 +90,69 @@ def TCPClientConnection(comm, addr, pPacketClient):
             if decode["Packet"] == "Client Data":
                 clientInfos = ClientData(**decode)
                 pPacketClient.setRemotePublicKey(clientInfos.PublicKey)
-                ans = EvaluationData()
+                ans = EvaluationData(Token='123geratoken12345',FlagAutentication=True)#funcao de autenticar no lugar do TRUE
                 comm.send(pPacketClient.encode(ans))
-        print(decode)
+            if decode["Packet"] == "Client Request":
+                #Apos verificar se o Token é válido
+                #
+                clientReq = ClientRequest(**decode)
+                ans = RequestResponse()
+                if(clientReq.FlagAvailableSession):
+                    ans.FlagAvailableSessions = True
+                    ans.FlagCompletedSessions = False
+                    #fazer um for pra pegar todas as sessões disponíveis
+                    temp = ['Votacao 1','Melhor filme'] # temp sera substituido pelo vetor de sessions
+                    ans.QtdSessions = len(temp) #valor temporario,vou ter que consultar o vetor
+                    ans.Sessions = temp
+                elif(clientReq.FlagCompletedSession):
+                    ans.FlagAvailableSessions = False
+                    ans.FlagCompletedSessions = True
+                    #fazer um for pra pegar todas as sessões completas
+                    temp = ['Votacao 0','Melhor serie'] # temp sera substituido pelo vetor de sessions
+                    ans.QtdSessions = len(temp) #valor temporario,vou ter que consultar o vetor
+                    ans.Sessions = temp
+                comm.send(pPacketClient.encode(ans))
+            if decode["Packet"] == "Client Request Create":
+                #Apos verificar se o Token é válido
+                #
+                clientReq = ClientRequestCreate(**decode)
+                ans = RequestResponse()
+                ans.FlagAvailableSessions = True
+                ans.FlagCompletedSessions = False
+                #fazer um for pra pegar todas as sessões disponíveis
+                temp = ['Votacao 1','Melhor filme'] # temp sera substituido pelo vetor de sessions
+                temp.append(clientReq.Title)
+                ans.QtdSessions = len(temp) #valor temporario,vou ter que consultar o vetor
+                ans.Sessions = temp
+                comm.send(pPacketClient.encode(ans))
+            if decode["Packet"] == "Session Details":
+                #Apos verificar o token de novo
+                #
+                ans = SessionDescription()
+                clientReq = SessionDetails(**decode)
+                ans.Title = clientReq.Title
+                ans.FlagFinished = False #vai ter que avaliar
+                temp = ["Meu Nobre", "Meu Riei"]
+                ans.QtdOptions = len(temp)
+                ans.Options = temp
+                ans.Result = 'Not defined' #vai ter que avaliar
+                comm.send(pPacketClient.encode(ans))
+            if decode["Packet"] == "Vote":
+                #Apos verificar o token de novo
+                #
+                clientVote = Vote(**decode)
+                ans = VoteResponse()
+                ##Consultar se a sessão existe
+                ##Consultar se a opção existe
+                ans.Title = clientVote.Title
+                ans.Options = clientVote.Options
+                ans.FlagComputed = True #se tiver dado certo
+                ans.Description = 'Sucessfull'
+                comm.send(pPacketClient.encode(ans))             
+        else:
+            print('DECODE ERA NONE')
+            sys.exit(-1)
+        print('decode = ',decode)
 
 def TCPTryReadMessage(comm, typeObject):
     try:
@@ -110,13 +170,27 @@ def TCPClientRunner():
 
     comando = ClientData(Email='meuNobre@', Password='torugo', PublicKey= pPacket.getLocalPublicKey())
     commTCPSocket.send(pPacket.encode(comando))
+    serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
+    #verificar se foi autenticado, se n tenta de novo
+    token = serverAns.Token
     time.sleep(5)
-
+    state = "ClientRequest"
     while True:
-        comando = ClientRequest()
-        commTCPSocket.send(pPacket.encode(comando))
-        serverAns = TCPTryReadMessage(commTCPSocket, None)
-        print(serverAns)
+        if(state == "ClientRequest"):
+            comando = ClientRequest(Token=token,FlagAvailableSession=True)
+            commTCPSocket.send(pPacket.encode(comando))
+            serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
+            print('Server ans CR = ',serverAns.Sessions)
+            state = "Vote"
+        if(state == "Vote"):
+            comando = Vote(Title='Votacao 1', Options='Meu Riei')
+            commTCPSocket.send(pPacket.encode(comando))
+            serverAns = TCPTryReadMessage(commTCPSocket, VoteResponse)
+            print('Server ans Vt = ',serverAns.Description,'\n',serverAns.Title,'\n',serverAns.Options)
+            state = "question"
+        if(state == "question"):
+            x = input('vai pra onde?')
+            state = "ClientRequest" if x == 0 else "Vote"
 
 def TCPServerRunner():
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
@@ -129,3 +203,5 @@ def TCPServerRunner():
         pPacketClient = ProcessPacket('RSA', pPacket.RSALocalPrivateKey)
         t = Thread(target=TCPClientConnection, args=(connectionSocket, addr, pPacketClient)) 
         t.start()
+        print('oi')
+        return
