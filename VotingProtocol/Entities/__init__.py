@@ -5,10 +5,12 @@ from VotingProtocol.Entities.FinishConnection import FinishConnection
 from VotingProtocol.Entities.HelloClient import HelloClient
 from VotingProtocol.Entities.HelloServers import HelloServers
 from VotingProtocol.Entities.RequestResponse import RequestResponse
+from VotingProtocol.Entities.Session import Session
 from VotingProtocol.Entities.SessionDetails import SessionDetails, SessionDescription
 from VotingProtocol.Entities.Vote import Vote
 from VotingProtocol.Entities.VoteResponse import VoteResponse
 
+
 __all__ = ['ClientData','ClientRequest','ClientRequestCreate', 'EvaluationData', 
-'FinishConnection', 'HelloClient', 'HelloServers', 'HelloServers', 'RequestResponse',
+'FinishConnection', 'HelloClient', 'HelloServers', 'HelloServers', 'RequestResponse','Session',
  'SessionDetails', 'SessionDescription', 'Vote', 'VoteResponse']
