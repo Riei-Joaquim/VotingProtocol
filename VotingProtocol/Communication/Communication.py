@@ -82,32 +82,41 @@ def UDPTryReadMessage(comm, typeObject):
         return None
 
 ############################################ TCP PROTOCOL ############################################
-def TCPClientReceive(comm, pPacketClient):
-    while True:
-        message = comm.recv(10240)
-        decode = pPacketClient.decode(message, None)
-        print(decode)
-
 def TCPClientConnection(comm, addr, pPacketClient):
     while True:
         message = comm.recv(10240)
         decode = pPacketClient.decode(message, None)
+        if decode is not None:
+            if decode["Packet"] == "Client Data":
+                clientInfos = ClientData(**decode)
+                pPacketClient.setRemotePublicKey(clientInfos.PublicKey)
+                ans = EvaluationData()
+                comm.send(pPacketClient.encode(ans))
         print(decode)
+
+def TCPTryReadMessage(comm, typeObject):
+    try:
+        encoded = comm.recv(10240)
+        return pPacket.decode(encoded, typeObject)
+    except Exception as e:
+        return None
 
 def TCPClientRunner():
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
     commTCPSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     commTCPSocket.setsockopt(IPPROTO_IP, IP_TTL, 128)
     commTCPSocket.connect((DEST_IP, TCP_PORT))
+    commTCPSocket.settimeout(1)
 
-    t = Thread(target=TCPClientReceive, args=(commTCPSocket, pPacket,))
-    t.start()
+    comando = ClientData(Email='meuNobre@', Password='torugo', PublicKey= pPacket.getLocalPublicKey())
+    commTCPSocket.send(pPacket.encode(comando))
+    time.sleep(5)
 
     while True:
-        #comando = ClientData(Email='meuNobre@', Password='torugo', PublicKey= pPacket.getLocalPublicKey())
-        comando = HelloServers()
+        comando = ClientRequest()
         commTCPSocket.send(pPacket.encode(comando))
-        time.sleep(5)
+        serverAns = TCPTryReadMessage(commTCPSocket, None)
+        print(serverAns)
 
 def TCPServerRunner():
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
