@@ -151,7 +151,7 @@ def TCPClientConnection(comm, addr, pPacketClient):
                 comm.send(pPacketClient.encode(ans))             
         else:
             print('DECODE ERA NONE')
-            sys.exit(-1)
+            return
         print('decode = ',decode)
 
 def TCPTryReadMessage(comm, typeObject):
@@ -167,21 +167,116 @@ def TCPClientRunner():
     commTCPSocket.setsockopt(IPPROTO_IP, IP_TTL, 128)
     commTCPSocket.connect((DEST_IP, TCP_PORT))
     commTCPSocket.settimeout(1)
-
-    comando = ClientData(Email='meuNobre@', Password='torugo', PublicKey= pPacket.getLocalPublicKey())
+    
+    email = input('insira o email:')
+    senha = input('insira a senha:')
+    #'meuNobre@'
+    #'meuNobre@'
+    comando = ClientData(Email=email, Password=senha, PublicKey= pPacket.getLocalPublicKey())
     commTCPSocket.send(pPacket.encode(comando))
     serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
     #verificar se foi autenticado, se n tenta de novo
+    
+    while serverAns.FlagAutentication != True :
+        print('Dados invalidos, tente novamente!')
+        email = input('insira o email:')
+        senha = input('insira a senha:')
+        #'meuNobre@'
+        #'meuNobre@'
+        comando = ClientData(Email=email, Password=senha, PublicKey= pPacket.getLocalPublicKey())
+        commTCPSocket.send(pPacket.encode(comando))
+        serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
+    
     token = serverAns.Token
     time.sleep(5)
     state = "ClientRequest"
     while True:
         if(state == "ClientRequest"):
-            comando = ClientRequest(Token=token,FlagAvailableSession=True)
+            option = int(input('1(consultar sessoes abertas);\n2(consultar sessoes concluidas);\n3(criar sessao)\n'))
+            if(option == 1):
+                comando = ClientRequest(Token=token,FlagAvailableSession=True)
+                commTCPSocket.send(pPacket.encode(comando))
+                serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
+                print('Server ans CR = ',serverAns.Sessions)
+                op2 = ''
+                k = 0
+                while(op2 != 'n' and op2 != 'N' and op2 != 'y' and op2 != 'Y'):
+                    saux = 'Deseja obter mais detalhes sobre alguma sessão? Y(sim)/N(Nao)'
+                    saux = 'Nao entendi. ' + saux if k == 1 else saux
+                    k = 1
+                    print(saux)
+                    op2 = input()
+                    if(op2 == 'y' or op2 == 'Y'):
+                        state = "SessionDetails"
+                    if(op2 == 'n' or op2 == 'N'):
+                        state = "ClientRequest"   
+            
+            if(option == 2):
+                comando = ClientRequest(Token=token,FlagCompletedSession=True)
+                commTCPSocket.send(pPacket.encode(comando))
+                serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
+                print('Server ans CR = ',serverAns.Sessions)
+                op2 = ''
+                k = 0
+                while(op2 != 'n' and op2 != 'N' and op2 != 'y' and op2 != 'Y'):
+                    saux = 'Deseja obter mais detalhes sobre alguma sessão? Y(sim)/N(Nao)'
+                    saux = 'Nao entendi. ' + saux if k == 1 else saux
+                    k = 1
+                    print(saux)
+                    op2 = input()
+                    if(op2 == 'y' or op2 == 'Y'):
+                        state = "SessionDetails"
+                    if(op2 == 'n' or op2 == 'N'):
+                        state = "ClientRequest"    
+            
+            if(option == 3):
+                titulo = input("Insira o titulo da sessao: ")
+                qtdOp = int(input("Quantas opcoes de votacao ela tem?"))
+                opts = []
+                for i in range(qtdOp):
+                    print('Nome da opcao ', i+1, ': ')
+                    opt = input()
+                    opts.append(opt)
+                comando = ClientRequestCreate(Token=token,FlagCreateSession=True)
+                comando.QtdOptions = qtdOp
+                comando.Options = opts
+                comando.Title = titulo
+                commTCPSocket.send(pPacket.encode(comando))
+                serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
+                print('Server ans CR = ',serverAns.Sessions)
+                op2 = ''
+                k = 0
+                while(op2 != 'n' and op2 != 'N' and op2 != 'y' and op2 != 'Y'):
+                    saux = 'Deseja obter mais detalhes sobre alguma sessão? Y(sim)/N(Nao)'
+                    saux = 'Nao entendi. ' + saux if k == 1 else saux
+                    k = 1
+                    print(saux)
+                    op2 = input()
+                    if(op2 == 'y' or op2 == 'Y'):
+                        state = "SessionDetails"
+                    if(op2 == 'n' or op2 == 'N'):
+                        state = "ClientRequest"  
+            
+        if(state == "SessionDetails"):
+            titulo = input('Digite o titulo da sessao')
+            comando = SessionDetails(Token=token,Title=titulo)
             commTCPSocket.send(pPacket.encode(comando))
-            serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
-            print('Server ans CR = ',serverAns.Sessions)
-            state = "Vote"
+            serverAns = TCPTryReadMessage(commTCPSocket, SessionDescription)
+            if serverAns.FlagFinished :
+                print(serverAns.Title)
+                for i in range(serverAns.QtdOptions):
+                    print(serverAns.Options[i])
+                state = "ClientRequest"
+            else:
+                print(serverAns.Title)
+                for i in range(serverAns.QtdOptions):
+                    print(serverAns.Options[i])
+                opt = input('Deseja votar? y/n')
+                if(opt == 'y'):
+                    state = 'Vote'
+                else:
+                    state = 'ClientRequest'
+
         if(state == "Vote"):
             comando = Vote(Title='Votacao 1', Options='Meu Riei')
             commTCPSocket.send(pPacket.encode(comando))
@@ -189,8 +284,8 @@ def TCPClientRunner():
             print('Server ans Vt = ',serverAns.Description,'\n',serverAns.Title,'\n',serverAns.Options)
             state = "question"
         if(state == "question"):
-            x = input('vai pra onde?')
-            state = "ClientRequest" if x == 0 else "Vote"
+            x = int(input('Votar de novo? 1(votar de novo) '))
+            state = "Vote" if x == 1 else "ClientRequest"
 
 def TCPServerRunner():
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
@@ -203,5 +298,3 @@ def TCPServerRunner():
         pPacketClient = ProcessPacket('RSA', pPacket.RSALocalPrivateKey)
         t = Thread(target=TCPClientConnection, args=(connectionSocket, addr, pPacketClient)) 
         t.start()
-        print('oi')
-        return
