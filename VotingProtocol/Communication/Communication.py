@@ -40,6 +40,17 @@ def getCompletedSessionsName():
             temp.append(s.Title)
     return temp
 
+def hasFields(objBytes, listFields):
+    try:
+        objDict = json.loads(objBytes.decode('utf-8'))
+        for field in listFields:
+            if field not in objDict:
+                return False
+        return True
+    except Exception as e:
+        print(e)
+    return False
+
 ########################################## UDP PROTOCOL ##########################################
 def startUDPSocket(typeSocket):
     UDPSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)        
@@ -55,44 +66,50 @@ def startUDPSocket(typeSocket):
     return UDPSocket
 
 def UDPReadMessage(comm, typeObject):
-    data, addr = comm.recvfrom(4096)
-    decode = pPacket.decode(data, typeObject)
+    data, addr = comm.recvfrom(10240)
+    if hasFields(data, ['0', '1', '2']):
+        decode = pPacket.decode(data, typeObject)
+    else:
+        decode = None
     return decode, addr
     
 def UDPBroadcastPacket(comm, packet):
     encoded = pPacket.encode(packet)
     comm.sendto(encoded, (DEST_IP, UDP_PORT))
     
-def UDPSendPacketTo(comm, packet, IP):
+def UDPSendSignedPacketTo(comm, packet, signatureKey, IP):
     encoded = pPacket.encode(packet)
-    comm.sendto(encoded, (IP, UDP_PORT))
+    signEncoded = pPacket.signAESPacket(encoded, signatureKey)
+    comm.sendto(signEncoded, (IP, UDP_PORT))
 
-def UDPServerRunner(comm):
+def UDPServerRunner(comm, signatureKey):
     print('O servidor UDP está ligado e operante!')
     while True:
         data, addr = UDPReadMessage(comm, HelloServers)
             
         if data is not None:
             hello = HelloClient(ServerAddress=str(getLocalIP()), PublicKey=str(pPacket.getLocalPublicKey()))
-            UDPSendPacketTo(comm,hello, addr[0]) 
+            UDPSendSignedPacketTo(comm, hello, signatureKey, addr[0]) 
             print('from ', addr, 'receive', data)
 
-def UDPDiscoverServers(comm):
+def UDPDiscoverValidsServers(comm, signatureKey):
     hello = None
     while True:
         msg = HelloServers()
         UDPBroadcastPacket(comm, msg)
-        ans = UDPTryReadMessage(comm, HelloClient)
-        if ans is not None:
-            hello = ans
-            break
-    
+        packetBytes = UDPTryReceiveMessage(comm)
+        if packetBytes is not None and hasFields(packetBytes, ['payload', 'sign']):
+            payload = pPacket.verifySignAESPacket(packetBytes, signatureKey)
+            ans = pPacket.decode(payload, HelloClient)
+            if ans is not None:
+                hello = ans
+                break
+            
     return hello
 
-def UDPTryReadMessage(comm, typeObject):
+def UDPTryReceiveMessage(comm):
     try:
-        encoded = comm.recv(4096)
-        return pPacket.decode(encoded, typeObject)
+        return comm.recv(10240)
     except timeout as e:
         return None
 

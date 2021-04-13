@@ -5,6 +5,8 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import utils
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from Crypto.Cipher import AES
@@ -62,6 +64,46 @@ class ProcessPacket:
                 blocksList[str(segment)] = block
         
         return blocksList
+    
+    def signAESPacket(self, packetBytes, key):
+        RSASignPrivateKey = serialization.load_pem_private_key(key, password=None)
+        hasher = hashes.Hash(hashes.SHA256())
+        hasher.update(packetBytes)
+        digest = hasher.finalize()
+        signature = RSASignPrivateKey.sign(
+            digest,
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()),salt_length=padding.PSS.MAX_LENGTH),
+            utils.Prehashed(hashes.SHA256()))
+        packet = {'payload': packetBytes.hex(), 'sign':signature.hex()}
+        cipherObj = json.dumps(packet)
+
+        return cipherObj.encode('utf-8')
+    
+    def verifySignAESPacket(self, packetBytes, key):
+        try:
+            cipherObj = json.loads(packetBytes.decode('utf-8'))
+            payload = bytes.fromhex(cipherObj['payload'])
+            sign = bytes.fromhex(cipherObj['sign'])
+            RSASignPublicKey = serialization.load_pem_public_key(key)
+        except Exception as e:
+            print(packetBytes)
+            print(e)
+            return None
+
+        try:
+            hasher = hashes.Hash(hashes.SHA256())
+            hasher.update(payload)
+            digest = hasher.finalize()
+            RSASignPublicKey.verify(
+                sign,
+                digest,
+                padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+                utils.Prehashed(hashes.SHA256()))
+        except InvalidSignature as e:
+            print(e)
+            return None
+
+        return payload
 
     def encode(self, obj):
         strObj = json.dumps(obj.__dict__)
@@ -70,8 +112,8 @@ class ProcessPacket:
             strObjbytes = strObj.encode('utf-8')
             AEScipher = AES.new(self.AESKey, AES.MODE_EAX)
             ciphertext, tag = AEScipher.encrypt_and_digest(strObjbytes)
-            encode = {'0':AEScipher.nonce.hex(), '1':tag.hex(), '2':ciphertext.hex()}
-            cipherObj = json.dumps(encode)
+            packet = {'0':AEScipher.nonce.hex(), '1':tag.hex(), '2':ciphertext.hex()}
+            cipherObj = json.dumps(packet)
             return cipherObj.encode('utf-8')
         else:
             blocks = self.segmentPacket(strObj, 256)
