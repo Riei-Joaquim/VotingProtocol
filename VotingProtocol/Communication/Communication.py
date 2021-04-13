@@ -7,6 +7,7 @@ import time
 import os
 import sys
 import json
+import secrets
 
 ############################################# UTILS ##############################################
 DEST_IP ='255.255.255.255'
@@ -51,6 +52,13 @@ def hasFields(objBytes, listFields):
     except Exception as e:
         print(e)
     return False
+
+def userLogin(usersBase, user, password):
+    if user in usersBase:
+        if password == usersBase[user]:
+            token = secrets.token_hex(512)
+            return True, token
+    return False, None
 
 def getASession(obj):
     tmpSes = Session(
@@ -172,20 +180,28 @@ def UDPTryReceiveMessage(comm):
         return None
 
 ############################################ TCP PROTOCOL ############################################
-def TCPClientConnection(comm, addr, pPacketClient):
+def TCPClientConnection(comm, addr, pPacketClient, usersData):
     while True:
         message = comm.recv(10240)
         decode = pPacketClient.decode(message, None)
+        userToken = None
         if decode is not None:
             if decode["Packet"] == "Client Data":
                 clientInfos = ClientData(**decode)
                 pPacketClient.setRemotePublicKey(clientInfos.PublicKey)
-                ans = EvaluationData(Token='123geratoken12345',FlagAutentication=True)#funcao de autenticar no lugar do TRUE
+                isAuth, token = userLogin(usersData, clientInfos.Email, clientInfos.Password)
+                ans = EvaluationData(Token=token, FlagAutentication=isAuth)#funcao de autenticar no lugar do TRUE
                 comm.send(pPacketClient.encode(ans))
+                
+                if isAuth:
+                    userToken = token
+
             if decode["Packet"] == "Client Request":
-                #Apos verificar se o Token é válido
-                #
                 clientReq = ClientRequest(**decode)
+
+                if userToken != clientReq.Token:
+                    continue
+
                 ans = RequestResponse()
                 if(clientReq.FlagAvailableSession):
                     ans.FlagAvailableSessions = True
@@ -203,9 +219,11 @@ def TCPClientConnection(comm, addr, pPacketClient):
                     ans.Sessions = temp
                 comm.send(pPacketClient.encode(ans))
             if decode["Packet"] == "Client Request Create":
-                #Apos verificar se o Token é válido
-                #
                 clientReq = ClientRequestCreate(**decode)
+
+                if userToken != clientReq.Token:
+                    continue
+
                 ans = RequestResponse()
                 ans.FlagAvailableSessions = True
                 ans.FlagCompletedSessions = False
@@ -219,8 +237,10 @@ def TCPClientConnection(comm, addr, pPacketClient):
                 ans.Sessions = temp
                 comm.send(pPacketClient.encode(ans))
             if decode["Packet"] == "Session Details":
-                #Apos verificar o token de novo
-                #
+
+                if userToken != clientReq.Token:
+                    continue
+
                 ans = SessionDescription()
                 clientReq = SessionDetails(**decode)
                 ans.Title = 'Not found'
@@ -241,9 +261,11 @@ def TCPClientConnection(comm, addr, pPacketClient):
 
                 comm.send(pPacketClient.encode(ans))
             if decode["Packet"] == "Vote":
-                #Apos verificar o token de novo
-                #
                 clientVote = Vote(**decode)
+
+                if userToken != clientReq.Token:
+                    continue
+
                 ans = VoteResponse()
                 ##Consultar se a sessão existe
                 ##Consultar se a opção existe
@@ -455,7 +477,7 @@ def TCPClientRunner():
             x = input('Votar de novo? 1(votar de novo) ')
             state = "Vote" if x == '1' else "ClientRequest"
 
-def TCPServerRunner():
+def TCPServerRunner(usersData):
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
     commTCPSocket.bind((TCP_SERVER_NAME, TCP_PORT))
     commTCPSocket.listen(CAPACITY_OF_USERS)
@@ -467,5 +489,5 @@ def TCPServerRunner():
     while True:
         connectionSocket, addr = commTCPSocket.accept()
         pPacketClient = ProcessPacket('RSA', pPacket.RSALocalPrivateKey)
-        t = Thread(target=TCPClientConnection, args=(connectionSocket, addr, pPacketClient)) 
+        t = Thread(target=TCPClientConnection, args=(connectionSocket, addr, pPacketClient, usersData)) 
         t.start()
