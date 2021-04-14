@@ -181,10 +181,11 @@ def UDPTryReceiveMessage(comm):
 
 ############################################ TCP PROTOCOL ############################################
 def TCPClientConnection(comm, addr, pPacketClient, usersData):
+    userToken = None
     while True:
         message = comm.recv(10240)
         decode = pPacketClient.decode(message, None)
-        userToken = None
+        
         if decode is not None:
             if decode["Packet"] == "Client Data":
                 clientInfos = ClientData(**decode)
@@ -291,6 +292,7 @@ def TCPClientConnection(comm, addr, pPacketClient, usersData):
                 print('Fim da conexão')
                 break
             print('decode = ',decode)
+            #print('to vivo')
         else:
             print('DECODE ERA NONE')
             return
@@ -331,6 +333,8 @@ def TCPClientRunner():
         comando = ClientData(Email=email, Password=senha, PublicKey= pPacket.getLocalPublicKey())
         commTCPSocket.send(pPacket.encode(comando))
         serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
+        while serverAns is None:
+            serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
     
     token = serverAns.Token
     time.sleep(2)
@@ -342,6 +346,7 @@ def TCPClientRunner():
             if(option == 1):
                 comando = ClientRequest(Token=token,FlagAvailableSession=True)
                 commTCPSocket.send(pPacket.encode(comando))
+                #print('Eviei')
                 serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
                 while serverAns is None:
                     serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
