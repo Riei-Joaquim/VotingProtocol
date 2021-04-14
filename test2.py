@@ -1,3 +1,0 @@
-import VotingProtocol
-
-VotingProtocol.VotingServer()

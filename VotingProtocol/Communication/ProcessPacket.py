@@ -13,11 +13,13 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
 class ProcessPacket:
+    """
+    Responsavel por criar as chaves de criptografia locais e por gerenciar as chaves remotas, sendo responsavel pelo encode e decodede pacotes.
+     Por padrão no estado inicial utilizamos o AES como encryter   
+    """
     def __init__(self, initialEncryption = 'AES', previousRSAKeys = None):
-        f = open('VotingProtocol\\config\\AESKey.bin', 'rb')
-        self.AESKey = f.read()
+        self.AESKey =  b'7\rY\x08\x7f\xf9\xdcn\x9a\x18\xd9\xf1:\x8c\x1b\x8a\x93\xf9\xedLC`As\xc2\x9c2\x1f\xa6\x93\xac\xf5'
         self.Encrypter = initialEncryption
-        f.close()
 
         # RSA encryption
         if previousRSAKeys is not None:
@@ -28,6 +30,7 @@ class ProcessPacket:
             self.RSALocalPublicKey = self.RSALocalPrivateKey.public_key()
         
         self.RSARemotePublicKey = None
+        self.SignKey = None
 
     def getLocalPublicKey(self):
         return self.RSALocalPublicKey.public_bytes(encoding=serialization.Encoding.PEM, 
@@ -41,6 +44,9 @@ class ProcessPacket:
                     format=serialization.PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
 
     def setRemotePublicKey(self, remotePublicKey):
+        """
+        Setup para definir a public key do outro comunicante, requisito para podermos trocar o encrytor pelo RSA 
+        """
         key = serialization.load_pem_public_key(remotePublicKey.encode())
         if isinstance(key, rsa.RSAPublicKey):
             self.RSARemotePublicKey = key
@@ -48,7 +54,17 @@ class ProcessPacket:
         else:
             print('Invalid Public Key!')
     
+    def setSignatureKey(self, signature, operation):
+        if operation == 'SIGNER':
+            self.SignKey = serialization.load_pem_private_key(signature, password=None)
+        elif operation == 'VERIFY':
+            self.SignKey = serialization.load_pem_public_key(signature)
+    
+    
     def segmentPacket(self, strObj, blockSize):
+        """
+        Fragmenta a string em uma lista com N blocos com a quantidade de bytes indicado 
+        """
         blocksList = {}
         block = strObj[0]
         segment = 0
@@ -65,12 +81,15 @@ class ProcessPacket:
         
         return blocksList
     
-    def signAESPacket(self, packetBytes, key):
-        RSASignPrivateKey = serialization.load_pem_private_key(key, password=None)
+    def signPacket(self, packetBytes):
+        """
+        Assina um pacote de bytes recebidos com a chave RSA previamente setada, para garantir autenticidade do conteudo.
+         Retornando um pacote em bytes com a assinatura do conteudo.
+        """
         hasher = hashes.Hash(hashes.SHA256())
         hasher.update(packetBytes)
         digest = hasher.finalize()
-        signature = RSASignPrivateKey.sign(
+        signature = self.SignKey.sign(
             digest,
             padding.PSS(mgf=padding.MGF1(hashes.SHA256()),salt_length=padding.PSS.MAX_LENGTH),
             utils.Prehashed(hashes.SHA256()))
@@ -79,22 +98,20 @@ class ProcessPacket:
 
         return cipherObj.encode('utf-8')
     
-    def verifySignAESPacket(self, packetBytes, key):
-        try:
-            cipherObj = json.loads(packetBytes.decode('utf-8'))
-            payload = bytes.fromhex(cipherObj['payload'])
-            sign = bytes.fromhex(cipherObj['sign'])
-            RSASignPublicKey = serialization.load_pem_public_key(key)
-        except Exception as e:
-            print(packetBytes)
-            print(e)
-            return None
+    def verifySignPacket(self, packetBytes):
+        """
+        Verifica a assinatura de um pacote de bytes recebidos com a chave RSA previamente setada, para garantir autenticidade do conteudo.
+         Retornando o payload do pacote caso seja confirmado autenticado.
+        """
+        cipherObj = json.loads(packetBytes.decode('utf-8'))
+        payload = bytes.fromhex(cipherObj['payload'])
+        sign = bytes.fromhex(cipherObj['sign'])
 
         try:
             hasher = hashes.Hash(hashes.SHA256())
             hasher.update(payload)
             digest = hasher.finalize()
-            RSASignPublicKey.verify(
+            self.SignKey.verify(
                 sign,
                 digest,
                 padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
@@ -106,6 +123,10 @@ class ProcessPacket:
         return payload
 
     def encode(self, obj):
+        """
+        Recebe um objeto DataClass, Converte ele para String e criptografa usando o encrypter definido
+         Retornando um objeto bytes, pronto para ser transmitido. 
+        """
         strObj = json.dumps(obj.__dict__)
         
         if(self.Encrypter == 'AES'):
@@ -127,6 +148,12 @@ class ProcessPacket:
             return strBlocks.encode('utf-8')
         
     def decode(self, obj, typeObject):
+        """
+        Recebe um objeto em bytes e tenta converter ele para string e descriptografar usando o encrypter definido.
+         o argumento typeObject define como sera passado o retorno, caso seja None, será retornado um objeto dicionario
+         com os campos e valores disponiveis, caso seja alguma entidade DataClass o resultado do descriptografia tentara ser
+         formatado em um objeto dessa DataClass, em todos os casos voltando None em caso de erro.
+        """
         strObj = ''
         try:
             if self.Encrypter == 'AES' :

@@ -11,12 +11,24 @@ import secrets
 
 ############################################# UTILS ##############################################
 DEST_IP ='255.255.255.255'
-UDP_PORT = 12000
-TCP_PORT = 12001
+UDP_PORT = -1
+TCP_PORT = -1
 TCP_SERVER_NAME = ''
-CAPACITY_OF_USERS = 100
+CAPACITY_OF_USERS = -1
 pPacket = ProcessPacket()
 lSes = []
+
+def setupPorts(udpPort, tcpPort):
+    global TCP_PORT, UDP_PORT
+    UDP_PORT = udpPort
+    TCP_PORT = tcpPort
+
+def setServerCapabilities(capabilities):
+    global CAPACITY_OF_USERS
+    CAPACITY_OF_USERS = capabilities
+
+def setSignature(signature, op):
+    pPacket.setSignatureKey(signature, op)
 
 def getLocalIP():
     hostName = gethostname()
@@ -77,7 +89,7 @@ def getASession(obj):
 
 def loadSessions():
     try:
-        arqSessions = open('sessions.json','r')
+        arqSessions = open('VotingProtocol\\data\\sessions.json','r')
         jsonSessions = json.load(arqSessions)
         tmpSessions = jsonSessions['Sessions']
         for ses in tmpSessions:
@@ -104,7 +116,7 @@ def storeSessions():
     saveSes = dict(Sessions=saveList)
     saveSes = json.dumps(saveSes, indent=4, sort_keys=False)
     try:
-        arqSessions = open('sessions.json','w')
+        arqSessions = open('VotingProtocol\\data\\sessions.json','w')
         arqSessions.write(saveSes)
         
         arqSessions.close()
@@ -143,29 +155,29 @@ def UDPBroadcastPacket(comm, packet):
     encoded = pPacket.encode(packet)
     comm.sendto(encoded, (DEST_IP, UDP_PORT))
     
-def UDPSendSignedPacketTo(comm, packet, signatureKey, IP):
+def UDPSendSignedPacketTo(comm, packet, IP):
     encoded = pPacket.encode(packet)
-    signEncoded = pPacket.signAESPacket(encoded, signatureKey)
+    signEncoded = pPacket.signPacket(encoded)
     comm.sendto(signEncoded, (IP, UDP_PORT))
 
-def UDPServerRunner(comm, signatureKey):
+def UDPServerRunner(comm):
     print('O servidor UDP está ligado e operante!')
     while True:
         data, addr = UDPReadMessage(comm, HelloServers)
             
         if data is not None:
             hello = HelloClient(ServerAddress=str(getLocalIP()), PublicKey=str(pPacket.getLocalPublicKey()))
-            UDPSendSignedPacketTo(comm, hello, signatureKey, addr[0]) 
+            UDPSendSignedPacketTo(comm, hello, addr[0]) 
             print('from ', addr, 'receive', data)
 
-def UDPDiscoverValidsServers(comm, signatureKey):
+def UDPDiscoverValidsServers(comm):
     hello = None
     while True:
         msg = HelloServers()
         UDPBroadcastPacket(comm, msg)
         packetBytes = UDPTryReceiveMessage(comm)
         if packetBytes is not None and hasFields(packetBytes, ['payload', 'sign']):
-            payload = pPacket.verifySignAESPacket(packetBytes, signatureKey)
+            payload = pPacket.verifySignPacket(packetBytes)
             ans = pPacket.decode(payload, HelloClient)
             if ans is not None:
                 hello = ans
@@ -286,10 +298,11 @@ def TCPClientConnection(comm, addr, pPacketClient, usersData):
                         else:
                             ans.Description = 'Option not found'
                         break
-
+                storeSessions()
                 comm.send(pPacketClient.encode(ans))     
             if decode["Packet"] == "Finish Connection":
                 print('Fim da conexão')
+                comm.close()
                 break
             print('decode = ',decode)
             #print('to vivo')

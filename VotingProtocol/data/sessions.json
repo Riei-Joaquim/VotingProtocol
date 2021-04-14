@@ -74,9 +74,7 @@
                 "no prato": 0
             },
             "Win_tie": [
-                "1234",
-                "feijao",
-                "no prato"
+                "1234", 
             ],
             "Result": null,
             "FlagFinished": true
@@ -95,6 +93,44 @@
                 "Votar": 0,
                 "Consultar": 0,
                 "Criar": 0
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "king",
+            "QtdOptions": 3,
+            "Options": [
+                "riei",
+                "joaquim",
+                "matos"
+            ],
+            "Timeout": "2021/04/14 12:00",
+            "VoteNumber": 0,
+            "VotePOption": {
+                "riei": 0,
+                "joaquim": 0,
+                "matos": 0
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "nobre",
+            "QtdOptions": 3,
+            "Options": [
+                "seu hugo",
+                "surugo",
+                "torugo"
+            ],
+            "Timeout": "2021/04/14 18:00",
+            "VoteNumber": 3,
+            "VotePOption": {
+                "seu hugo": 1,
+                "surugo": 1,
+                "torugo": 1
             },
             "Win_tie": [],
             "Result": null,
