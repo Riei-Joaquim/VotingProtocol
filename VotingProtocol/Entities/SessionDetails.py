@@ -15,3 +15,4 @@ class SessionDescription:
     QtdOptions:int = None
     Result:list = None
     Options:list = None
+    Win_tie:list = None

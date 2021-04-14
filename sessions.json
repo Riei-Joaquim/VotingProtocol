@@ -1,0 +1,104 @@
+{
+    "Sessions": [
+        {
+            "Title": "Votemos",
+            "QtdOptions": 2,
+            "Options": [
+                "Riei",
+                "Nobre"
+            ],
+            "Timeout": "2021/04/14 4:25",
+            "VoteNumber": 0,
+            "VotePOption": {
+                "Riei": 0,
+                "Nobre": 0
+            },
+            "Win_tie": [
+                "Riei",
+                "Nobre"
+            ],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "Teste",
+            "QtdOptions": 2,
+            "Options": [
+                "Eu",
+                "Tu"
+            ],
+            "Timeout": "2021/04/14 05:00",
+            "VoteNumber": 4,
+            "VotePOption": {
+                "Eu": 3,
+                "Tu": 1
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "terses",
+            "QtdOptions": 4,
+            "Options": [
+                "morango",
+                "chocolate",
+                "framboesa",
+                "maracuja"
+            ],
+            "Timeout": "2021/04/14 05:05",
+            "VoteNumber": 0,
+            "VotePOption": {
+                "morango": 0,
+                "chocolate": 0,
+                "framboesa": 0,
+                "maracuja": 0
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "quarta",
+            "QtdOptions": 3,
+            "Options": [
+                "1234",
+                "feijao",
+                "no prato"
+            ],
+            "Timeout": "2021/04/14 5:10",
+            "VoteNumber": 0,
+            "VotePOption": {
+                "1234": 0,
+                "feijao": 0,
+                "no prato": 0
+            },
+            "Win_tie": [
+                "1234",
+                "feijao",
+                "no prato"
+            ],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "Working",
+            "QtdOptions": 3,
+            "Options": [
+                "Votar",
+                "Consultar",
+                "Criar"
+            ],
+            "Timeout": "2021/04/14 5:40",
+            "VoteNumber": 0,
+            "VotePOption": {
+                "Votar": 0,
+                "Consultar": 0,
+                "Criar": 0
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": false
+        }
+    ]
+}

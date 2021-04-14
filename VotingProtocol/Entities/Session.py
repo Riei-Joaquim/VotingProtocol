@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import *
 
 @dataclass
 class Session:
@@ -17,6 +18,7 @@ class Session:
         self.QtdOptions = QtdOptions
         self.Options = Options
         self.Timeout = Timeout
+        self.Win_tie = []
         self.init()
 
     def init(self):
@@ -37,6 +39,7 @@ class Session:
     def calc_result(self):
         if self.is_finished():
             result = []
+            self.Win_tie = []
             vwin = 0
             for opt in self.Options:
                 v_atual = self.VotePOption[opt]
@@ -45,12 +48,48 @@ class Session:
                 if(v_atual > vwin):
                     self.Win_tie = [opt]
                     vwin = v_atual
-                perc = float(v_atual)/float(self.VoteNumber)
-                straux = opt + str(perc) + '%'
+                perc = 0.0
+                if(self.VoteNumber !=0):
+                    perc = float(v_atual)/float(self.VoteNumber)
+                straux = opt + ' ' + str(perc) + '%'
                 result.append(straux)
             return result
         else:
             return 'Not defined'
 
     def is_finished(self):
+        now = datetime.today()
+        closeDate = datetime.strptime(self.Timeout, '%Y/%m/%d %H:%M')
+        print(closeDate)
+        if(now.year > closeDate.year):
+            self.FlagFinished = True
+            return self.FlagFinished
+        if(now.year < closeDate.year):
+            self.FlagFinished = False
+            return self.FlagFinished
+        if(now.month > closeDate.month):
+            self.FlagFinished = True
+            return self.FlagFinished
+        if(now.month < closeDate.month):
+            self.FlagFinished = False
+            return self.FlagFinished
+        if(now.day > closeDate.day):
+            self.FlagFinished = True
+            return self.FlagFinished
+        if(now.day < closeDate.day):
+            self.FlagFinished = False
+            return self.FlagFinished
+        if(now.hour > closeDate.hour):
+            self.FlagFinished = True
+            return self.FlagFinished
+        if(now.hour < closeDate.hour):
+            self.FlagFinished = False
+            return self.FlagFinished
+        if(now.minute > closeDate.minute):
+            self.FlagFinished = True
+            return self.FlagFinished
+        if(now.minute < closeDate.minute):
+            self.FlagFinished = False
+            return self.FlagFinished
+        self.FlagFinished = True
         return self.FlagFinished
