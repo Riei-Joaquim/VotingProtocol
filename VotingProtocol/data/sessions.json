@@ -74,7 +74,9 @@
                 "no prato": 0
             },
             "Win_tie": [
-                "1234", 
+                "1234",
+                "feijao",
+                "no prato"
             ],
             "Result": null,
             "FlagFinished": true

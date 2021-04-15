@@ -28,6 +28,10 @@ def setServerCapabilities(capabilities):
     CAPACITY_OF_USERS = capabilities
 
 def setSignature(signature, op):
+    """
+    Setup dos bytes de assinatura no objeto que gerencia a criptografia, que com base na operacao desejada
+    sabe que tipo de chave foi passada. 
+    """
     pPacket.setSignatureKey(signature, op)
 
 def getLocalIP():
@@ -131,6 +135,10 @@ def alrdExist(name):
 
 ########################################## UDP PROTOCOL ##########################################
 def startUDPSocket(typeSocket):
+    """
+    inicializa e retorna um socket UDP configurado para executar as funcoes do protocolo em sua fase UDP
+    tanto da parte do client quanto do servidor.
+    """
     UDPSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)        
     UDPSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     UDPSocket.setsockopt(IPPROTO_IP, IP_TTL, 128)
@@ -161,6 +169,10 @@ def UDPSendSignedPacketTo(comm, packet, IP):
     comm.sendto(signEncoded, (IP, UDP_PORT))
 
 def UDPServerRunner(comm):
+    """
+    Metodo do servidor, com a rotina de receber pacotes broadcast com 'Hello Servers' criptogrados com uma chave AES e respodem ao remetente
+    com um pacote 'Hello Client' assinado com uma chave previamente definida.
+    """
     print('O servidor UDP está ligado e operante!')
     while True:
         data, addr = UDPReadMessage(comm, HelloServers)
@@ -171,6 +183,11 @@ def UDPServerRunner(comm):
             print('from ', addr, 'receive', data)
 
 def UDPDiscoverValidsServers(comm):
+    """
+    Metodo do cliente, utilizando UDP envia broadcasts com 'Hello Servers' periodicamente na rede e recebe pacotes
+    'Hello Client' assinados em uma porta previamente definida.
+     Essa loop se mantem ate que seja recebido um pacote com assinatura valida, sendo retornado o objeto no payload.
+    """
     hello = None
     while True:
         msg = HelloServers()
@@ -193,6 +210,11 @@ def UDPTryReceiveMessage(comm):
 
 ############################################ TCP PROTOCOL ############################################
 def TCPClientConnection(comm, addr, pPacketClient, usersData):
+    """
+    Metodo do servidor, que representa a conexao de um cliente, recebendo dele requisicoes e dados que seram processados,
+    tanto para login do usuario quanto para armazenar votos depositados, sendo respondidos seguindo o fluxo de estados 
+    da documentacao, comunicacao utilizando criptografia RSA.
+    """
     userToken = None
     while True:
         message = comm.recv(10240)
@@ -319,6 +341,11 @@ def TCPTryReadMessage(comm, typeObject):
         return None
 
 def TCPClientRunner():
+    """
+    Metodo do client, que executa a rotina de votacao, lendo os comandos do usuario no terminal, enviando as requisicoes
+    para o servidor via TCP, comunicacao criptograda baseado em RSA. Recebendo as respostas, as processando e exibindo 
+    as informacoes correspondentes seguindo o fluxo de estados definidos na documentacao. 
+    """
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
     commTCPSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     commTCPSocket.setsockopt(IPPROTO_IP, IP_TTL, 128)
@@ -496,6 +523,11 @@ def TCPClientRunner():
             state = "Vote" if x == '1' else "ClientRequest"
 
 def TCPServerRunner(usersData):
+    """
+    Metodo do servidor, estabelece as conexoes TCPs com os clientes, quando um cliente se conectar destina uma thread
+    de execucao para processar e responder as requisicoes, comunicacao baseada na chaves RSA trocadas na fase UDP do
+    protocolo 
+    """
     commTCPSocket = socket(AF_INET, SOCK_STREAM)
     commTCPSocket.bind((TCP_SERVER_NAME, TCP_PORT))
     commTCPSocket.listen(CAPACITY_OF_USERS)

@@ -14,7 +14,9 @@ def VotingServer(signaturePrivateKey:bytes, userAccounts:dict, udpPort:int, tcpP
     Comm.setSignature(signaturePrivateKey, 'SIGNER')
 
     CommUDPSocket = Comm.startUDPSocket('SERVER')
+    #thread UDP para responder clientes a procura de servidores
     managerUDP = Thread(target=Comm.UDPServerRunner, args=(CommUDPSocket,))
+    #thread TCP para receber as requisicoes dos clientes e seus votos de forma segura
     managerTCP = Thread(target=Comm.TCPServerRunner, args=(userAccounts,))
     managerUDP.start()
     managerTCP.start()

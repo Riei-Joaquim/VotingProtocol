@@ -50,7 +50,7 @@ class Session:
                     vwin = v_atual
                 perc = 0.0
                 if(self.VoteNumber !=0):
-                    perc = float(v_atual)/float(self.VoteNumber)
+                    perc = float(v_atual)/float(self.VoteNumber) * 100
                 straux = opt + ' ' + str(perc) + '%'
                 result.append(straux)
             return result

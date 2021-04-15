@@ -15,14 +15,16 @@ def VotingClient(signaturePublicKey:bytes, udpPort:int, TcpPort:int):
     CommUDPSocket = Comm.startUDPSocket('CLIENT')
     # Descoberta e validação do servidor
     hello = Comm.UDPDiscoverValidsServers(CommUDPSocket)
-
+    
+    #configuracao da conexao com o servidor e definindo a chave publica do servidor para criptografar as mensagens seguintes com RSA
     if hello is not None:
         print(hello)
         Comm.setupRemoteServer(hello.ServerAddress, hello.PublicKey)
-
+    
+    #finalizacao da parte UDP da comunicacao
     CommUDPSocket.close()
 
-    # Conect in server
+    # comunicacao concreta com o servidor, fazendo login, requisicoes de dados e votando, na rotina de cliente
     Comm.TCPClientRunner()
 
     
