@@ -4,8 +4,6 @@ from socket import *
 from datetime import datetime
 from threading import Thread
 import time
-import os
-import sys
 import json
 import secrets
 
@@ -195,10 +193,11 @@ def UDPDiscoverValidsServers(comm):
         packetBytes = UDPTryReceiveMessage(comm)
         if packetBytes is not None and hasFields(packetBytes, ['payload', 'sign']):
             payload = pPacket.verifySignPacket(packetBytes)
-            ans = pPacket.decode(payload, HelloClient)
-            if ans is not None:
-                hello = ans
-                break
+            if payload is not None:
+                ans = pPacket.decode(payload, HelloClient)
+                if ans is not None:
+                    hello = ans
+                    break
             
     return hello
 
@@ -316,13 +315,15 @@ def TCPClientConnection(comm, addr, pPacketClient, usersData):
                         if ans.FlagComputed == True :
                             ans.Option = clientVote.Option
                             ans.Description = 'Sucessfull Vote' 
+                        elif (s.FlagFinished):
+                            ans.Description = 'Session Closed' 
                         else:
                             ans.Description = 'Option not found'
                         break
                 storeSessions()
                 comm.send(pPacketClient.encode(ans))     
             if decode["Packet"] == "Finish Connection":
-                print('Fim da conexão')
+                print('Fim de conexao')
                 comm.close()
                 break
             print('decode = ',decode)

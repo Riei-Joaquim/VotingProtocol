@@ -1,7 +1,6 @@
 from VotingProtocol.Entities import *
 import VotingProtocol.Communication.Communication as Comm
 from VotingProtocol.Communication.ProcessPacket import ProcessPacket
-import json
 from threading import Thread
 
 def VotingServer(signaturePrivateKey:bytes, userAccounts:dict, udpPort:int, tcpPort:int, tcpCommCapabilities:int):

@@ -1,8 +1,5 @@
 from VotingProtocol.Entities import *
 import VotingProtocol.Communication.Communication as Comm
-import time
-import json
-from threading import Thread
 
 def VotingClient(signaturePublicKey:bytes, udpPort:int, TcpPort:int):
     """

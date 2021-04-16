@@ -29,7 +29,7 @@ class Session:
     def vote(self,option):
         print(str(self.VotePOption))
         print(option)
-        if (self.VotePOption.get(option,-1)) != -1:
+        if ((self.VotePOption.get(option,-1)) != -1) and (not (self.is_finished())):
             self.VoteNumber += 1
             self.VotePOption[option] += 1
             return True

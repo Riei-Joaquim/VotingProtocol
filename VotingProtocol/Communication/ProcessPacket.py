@@ -1,6 +1,5 @@
 from VotingProtocol.Entities import *
 import json
-import sys
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
@@ -14,7 +13,7 @@ from Crypto.Random import get_random_bytes
 
 class ProcessPacket:
     """
-    Responsavel por criar as chaves de criptografia locais e por gerenciar as chaves remotas, sendo responsavel pelo encode e decodede pacotes.
+    Responsavel por criar as chaves de criptografia locais e por gerenciar as chaves remotas, sendo responsavel pelo encode e decode de pacotes.
      Por padrão no estado inicial utilizamos o AES como encryter   
     """
     def __init__(self, initialEncryption = 'AES', previousRSAKeys = None):
@@ -31,6 +30,24 @@ class ProcessPacket:
         
         self.RSARemotePublicKey = None
         self.SignKey = None
+
+    def generateRSAKeyToSigners(self):
+        """
+        Metodo de setup usado para gerar a chave de assinaturas que certificam a autoridade do server para o cliente, 
+         A chave publica sera passada para a funcao principal do cliente e a privada para a funcao principal do servidor.
+        """
+        RSAPrivateKey = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+        RSAPublicKey = RSAPrivateKey.public_key()
+
+        privateBytes = RSAPrivateKey.private_bytes(encoding=serialization.Encoding.PEM, 
+                            format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
+        publicBytes = RSAPublicKey.public_bytes(encoding=serialization.Encoding.PEM,format=serialization.PublicFormat.SubjectPublicKeyInfo)
+        print('\n##################### Private Bytes ######################\n')
+        print(privateBytes)
+        print('\n##################### Public Bytes #######################\n')
+        print(publicBytes)
+
+        return privateBytes, publicBytes
 
     def getLocalPublicKey(self):
         return self.RSALocalPublicKey.public_bytes(encoding=serialization.Encoding.PEM, 
