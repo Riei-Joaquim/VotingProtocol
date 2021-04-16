@@ -242,15 +242,13 @@ def TCPClientConnection(comm, addr, pPacketClient, usersData):
                     ans.FlagAvailableSessions = True
                     ans.FlagCompletedSessions = False
                     temp = getAvailableSessionsName()
-                    #temp = ['Votacao 1','Melhor filme'] # temp sera substituido pelo vetor de sessions
-                    ans.QtdSessions = len(temp) #valor temporario,vou ter que consultar o vetor
+                    ans.QtdSessions = len(temp) 
                     ans.Sessions = temp
                 elif(clientReq.FlagCompletedSession):
                     ans.FlagAvailableSessions = False
                     ans.FlagCompletedSessions = True
                     temp = getCompletedSessionsName()
-                    #temp = ['Votacao 0','Melhor serie'] # temp sera substituido pelo vetor de sessions
-                    ans.QtdSessions = len(temp) #valor temporario,vou ter que consultar o vetor
+                    ans.QtdSessions = len(temp)
                     ans.Sessions = temp
                 comm.send(pPacketClient.encode(ans))
             if decode["Packet"] == "Client Request Create":
@@ -265,7 +263,10 @@ def TCPClientConnection(comm, addr, pPacketClient, usersData):
                 sessionAtual = Session(clientReq.Title,clientReq.QtdOptions,clientReq.Options,clientReq.Timeout)
                 if(alrdExist(clientReq.Title) == False):
                     lSes.append(sessionAtual)
+                    ans.FlagCreatedSessions = True
                     storeSessions()
+                else:
+                    ans.FlagCreatedSessions = False
                 temp = getAvailableSessionsName()
                 #temp = ['Votacao 1','Melhor filme'] # temp sera substituido pelo vetor de sessions
                 ans.QtdSessions = len(temp) #valor temporario,vou ter que consultar o vetor
@@ -302,11 +303,9 @@ def TCPClientConnection(comm, addr, pPacketClient, usersData):
                     continue
 
                 ans = VoteResponse()
-                ##Consultar se a sessão existe
-                ##Consultar se a opção existe
                 ans.Title = clientVote.Title + ' Not found'
                 ans.Option = clientVote.Option + ' Not found'
-                ans.FlagComputed = False #se tiver dado errado
+                ans.FlagComputed = False
                 ans.Description = 'Session not found'
 
                 for s in lSes:
@@ -354,9 +353,7 @@ def TCPClientRunner():
     
     email = input('insira o email: ')
     senha = input('insira a senha: ')
-    print(datetime.today())
-    #'meuNobre@'
-    #'meuNobre@'
+    #print(datetime.today())
     comando = ClientData(Email=email, Password=senha, PublicKey= pPacket.getLocalPublicKey())
     commTCPSocket.send(pPacket.encode(comando))
     serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
@@ -368,29 +365,31 @@ def TCPClientRunner():
         print('Dados invalidos, tente novamente!')
         email = input('insira o email: ')
         senha = input('insira a senha: ')
-        #'meuNobre@'
-        #'meuNobre@'
         comando = ClientData(Email=email, Password=senha, PublicKey= pPacket.getLocalPublicKey())
         commTCPSocket.send(pPacket.encode(comando))
         serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
         while serverAns is None:
             serverAns = TCPTryReadMessage(commTCPSocket, EvaluationData)
     
+    sessionChosen = ''
     token = serverAns.Token
     time.sleep(2)
     state = "ClientRequest"
     while True:
         if(state == "ClientRequest"):
             print('\n\n#---# Selecione a Requisicao #---#')
-            option = int(input('\n\t1(consultar sessoes abertas);\n\t2(consultar sessoes concluidas);\n\t3(criar sessao);\n\t4(sair)\n\nSua escolha: '))
-            if(option == 1):
+            option = input('\n\t1(consultar sessoes abertas);\n\t2(consultar sessoes concluidas);\n\t3(criar sessao);\n\t4(sair)\n\nSua escolha: ')
+            while (option != '1' and option != '2' and option != '3' and option != '4'):
+                print('Nao entendi a escolha')
+                option = input('\n\t1(consultar sessoes abertas);\n\t2(consultar sessoes concluidas);\n\t3(criar sessao);\n\t4(sair)\n\nSua escolha: ')
+            if(option == '1'):
                 comando = ClientRequest(Token=token,FlagAvailableSession=True)
                 commTCPSocket.send(pPacket.encode(comando))
                 #print('Eviei')
                 serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
                 while serverAns is None:
                     serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
-                print('Server ans CR = ',serverAns.Sessions)
+                print('Sessoes disponiveis para votacao = ',serverAns.Sessions)
                 op2 = ''
                 k = 0
                 while(op2 != 'n' and op2 != 'N' and op2 != 'y' and op2 != 'Y'):
@@ -404,13 +403,13 @@ def TCPClientRunner():
                     if(op2 == 'n' or op2 == 'N'):
                         state = "ClientRequest"   
             
-            if(option == 2):
+            if(option == '2'):
                 comando = ClientRequest(Token=token,FlagCompletedSession=True)
                 commTCPSocket.send(pPacket.encode(comando))
                 serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
                 while serverAns is None:
                     serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
-                print('Server ans CR = ',serverAns.Sessions)
+                print('Sessoes concluidas = ',serverAns.Sessions)
                 op2 = ''
                 k = 0
                 while(op2 != 'n' and op2 != 'N' and op2 != 'y' and op2 != 'Y'):
@@ -420,21 +419,25 @@ def TCPClientRunner():
                     print(saux,end=' ')
                     op2 = input().lower()
                     #testeboy = op2.lower()
-                    print(op2)
+                    #print(op2)
                     if(op2 == 'y' or op2 == 'Y'):
                         state = "SessionDetails"
                     if(op2 == 'n' or op2 == 'N'):
                         state = "ClientRequest"    
             
-            if(option == 3):
+            if(option == '3'):
                 titulo = input("Insira o titulo da sessao: ")
-                qtdOp = int(input("Quantas opcoes de votacao ela tem? "))
+                while True:
+                    try:
+                        qtdOp = int(input("Quantas opcoes de votacao ela tem? "))
+                        break
+                    except Exception as erro:
+                        print('Digite um numero valido')
                 opts = []
                 for i in range(qtdOp):
                     print('Nome da opcao ', i+1, ': ', end='')
                     opt = input()
                     opts.append(opt)
-                #tmOut = input('quando encerra? AAAA/MM/DD H:M\n')
                 while True :
                     try:
                         tmOut = input('quando encerra a sessao? AAAA/MM/DD H:M\n')
@@ -449,12 +452,15 @@ def TCPClientRunner():
                 comando.Title = titulo
                 comando.Timeout = tmOut
                 
-                print(closeDate)
+                #print(closeDate)
                 commTCPSocket.send(pPacket.encode(comando))
                 serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
                 while serverAns is None:
                     serverAns = TCPTryReadMessage(commTCPSocket, RequestResponse)
-                print('Server ans CR = ',serverAns.Sessions)
+                #print('Server ans: \n',serverAns,end='\n\n')
+                if(serverAns.FlagCreatedSessions == False):
+                    print('\tNao foi possivel criar a sessao. Ja existe uma sessao cadastrada com esse nome\n')
+                print('Sessoes disponiveis para votacao = ',serverAns.Sessions)
                 op2 = ''
                 k = 0
                 while(op2 != 'n' and op2 != 'N' and op2 != 'y' and op2 != 'Y'):
@@ -463,12 +469,12 @@ def TCPClientRunner():
                     k = 1
                     op2 = input(saux+' ')
                     op2.lower()
-                    print(op2)
+                    #print(op2)
                     if(op2 == 'y' or op2 == 'Y'):
                         state = "SessionDetails"
                     if(op2 == 'n' or op2 == 'N'):
                         state = "ClientRequest"  
-            if(option == 4):
+            if(option == '4'):
                 comando = FinishConnection(Token=token)
                 commTCPSocket.send(pPacket.encode(comando))
                 commTCPSocket.close()
@@ -502,14 +508,20 @@ def TCPClientRunner():
                 for i in range(serverAns.QtdOptions):
                     print('\t',serverAns.Options[i],sep='')
                 print('')
-                opt = input('Deseja votar? y/n ').lower()
-                if(opt == 'y'):
-                    state = 'Vote'
-                else:
+
+                if(serverAns.Title != 'Not found'):
+                    sessionChosen = serverAns.Title
+                    opt = input('Deseja votar? y/n ').lower()
+                    while (opt != 'n' and opt != 'y'):
+                        opt = input('Nao entendi! Deseja votar? y/n ').lower()
+                    
+                    state = 'Vote' if (opt == 'y') else 'ClientRequest'
+
+                else: 
                     state = 'ClientRequest'
 
         if(state == "Vote"):
-            titulo = input('Qual o titulo da votacao?\n')
+            titulo = sessionChosen
             option = input('Qual a opcao?\n')
             comando = Vote(Token=token,Title=titulo, Option=option)
             commTCPSocket.send(pPacket.encode(comando))
@@ -519,8 +531,10 @@ def TCPClientRunner():
             print('Server ans Vt = ',serverAns.Description,'\n',serverAns.Title,'\n',serverAns.Option, sep='')
             state = "question"
         if(state == "question"):
-            x = input('Votar de novo? 1(votar de novo) ')
-            state = "Vote" if x == '1' else "ClientRequest"
+            opt = input('Votar de novo? y/n ').lower()
+            while (opt != 'n' and opt != 'y'):
+                opt = input('Nao entendi! Deseja votar de novo? y/n ').lower()
+            state = "Vote" if (opt == 'y') else "ClientRequest"
 
 def TCPServerRunner(usersData):
     """

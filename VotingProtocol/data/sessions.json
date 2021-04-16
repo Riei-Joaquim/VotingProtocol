@@ -136,6 +136,104 @@
             },
             "Win_tie": [],
             "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "Testando",
+            "QtdOptions": 2,
+            "Options": [
+                "Eu",
+                "Tu"
+            ],
+            "Timeout": "2021/04/15 22:40",
+            "VoteNumber": 3,
+            "VotePOption": {
+                "Eu": 2,
+                "Tu": 1
+            },
+            "Win_tie": [
+                "Eu"
+            ],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "GG",
+            "QtdOptions": 2,
+            "Options": [
+                "izi",
+                "wp"
+            ],
+            "Timeout": "2021/04/15 23:20",
+            "VoteNumber": 0,
+            "VotePOption": {
+                "izi": 0,
+                "wp": 0
+            },
+            "Win_tie": [
+                "izi",
+                "wp"
+            ],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "gg",
+            "QtdOptions": 2,
+            "Options": [
+                "izi",
+                "wp"
+            ],
+            "Timeout": "2021/04/15 23:20",
+            "VoteNumber": 2,
+            "VotePOption": {
+                "izi": 1,
+                "wp": 1
+            },
+            "Win_tie": [
+                "izi",
+                "wp"
+            ],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "Foi",
+            "QtdOptions": 0,
+            "Options": [],
+            "Timeout": "2021/04/15 23:30",
+            "VoteNumber": 0,
+            "VotePOption": {},
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "OK",
+            "QtdOptions": 2,
+            "Options": [
+                "A",
+                "B"
+            ],
+            "Timeout": "2021/04/15 23:35",
+            "VoteNumber": 1,
+            "VotePOption": {
+                "A": 1,
+                "B": 0
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": false
+        },
+        {
+            "Title": "notOK",
+            "QtdOptions": 0,
+            "Options": [],
+            "Timeout": "2020/2/20 2:2",
+            "VoteNumber": 0,
+            "VotePOption": {},
+            "Win_tie": [],
+            "Result": null,
             "FlagFinished": false
         }
     ]

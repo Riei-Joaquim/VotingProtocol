@@ -18,7 +18,7 @@ def VotingClient(signaturePublicKey:bytes, udpPort:int, TcpPort:int):
     
     #configuracao da conexao com o servidor e definindo a chave publica do servidor para criptografar as mensagens seguintes com RSA
     if hello is not None:
-        print(hello)
+        #print(hello)
         Comm.setupRemoteServer(hello.ServerAddress, hello.PublicKey)
     
     #finalizacao da parte UDP da comunicacao
