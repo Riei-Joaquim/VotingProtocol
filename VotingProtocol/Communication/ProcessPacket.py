@@ -72,6 +72,10 @@ class ProcessPacket:
             print('Invalid Public Key!')
     
     def setSignatureKey(self, signature, operation):
+        """
+        Setup para definir a chave de assinatura que sera utilizada para verificar autenticidade com operation
+        sendo 'VERIFY', ou que sera utilizada para assinar com operation sendo 'SIGNER'.
+        """
         if operation == 'SIGNER':
             self.SignKey = serialization.load_pem_private_key(signature, password=None)
         elif operation == 'VERIFY':

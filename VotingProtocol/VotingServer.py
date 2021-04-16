@@ -5,7 +5,7 @@ from threading import Thread
 
 def VotingServer(signaturePrivateKey:bytes, userAccounts:dict, udpPort:int, tcpPort:int, tcpCommCapabilities:int):
     """
-    Metodo principal para a execução da rotina do sevidor, no protocolo de votação. 
+    Metodo principal para a execução da rotina do servidor, no protocolo de votação. 
     """
     # Setup de parametros da rede para a operação do protocolo pelo lado do servidor
     Comm.setupPorts(udpPort, tcpPort)
