@@ -15,6 +15,44 @@
                 "b": 1,
                 "c": 1
             },
+            "Win_tie": [
+                "a"
+            ],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "test2",
+            "QtdOptions": 3,
+            "Options": [
+                "q",
+                "w",
+                "e"
+            ],
+            "Timeout": "2021/04/16 20:58",
+            "VoteNumber": 4,
+            "VotePOption": {
+                "q": 2,
+                "w": 1,
+                "e": 1
+            },
+            "Win_tie": [],
+            "Result": null,
+            "FlagFinished": true
+        },
+        {
+            "Title": "test3",
+            "QtdOptions": 2,
+            "Options": [
+                "q",
+                "a"
+            ],
+            "Timeout": "2021/04/16 21:35",
+            "VoteNumber": 6,
+            "VotePOption": {
+                "q": 4,
+                "a": 2
+            },
             "Win_tie": [],
             "Result": null,
             "FlagFinished": true
