@@ -1,11 +1,11 @@
 # VotingProtocol:
-Projeto desenvolvido para a disciplina de Protocolos de Comunicação da UFPE, sendo um sistema de votação seguro em uma rede WiFi não confiável.
+Project developed for the discipline of Communication Protocols at UFPE, being a secure voting system on an unreliable WiFi network.
 
 ## Install Depedencies
 ```bash
 $ pip install -e .
 ```
-- Principais depedencias:
+- Main depedencias:
   -   cryptography v3.1.1
   -   pycryptodome v3.10.1
   -   threading
@@ -16,9 +16,9 @@ $ pip install -e .
   -   secrets
   -   setuptools
 
-- Testado utilizando Enviroment Anaconda com Python 3.8.5 
+- Tested using Anaconda Environment with Python 3.8.5
  
-## Executando o Servidor:
-Execute o código exemplo da chamada ao servidor do protocolo ```testServer.py ``` no terminal, para mais detalhes da operação consulte a documentação.
-## Executando o Cliente:
-Execute o código exemplo da chamada ao cliente do protocolo ```testClient.py ``` no terminal, para mais detalhes da operação consulte a documentação.
+## Running the Server:
+Run the sample code of the ```testServer.py ``` protocol server call in the terminal, for more details of the operation see the documentation.
+## Running the Client:
+Run the sample code of the  ```testClient.py ``` protocol server call in the terminal, for more details of the operation see the documentation.
